@@ -1,0 +1,152 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * OpenDXP
+ *
+ * This source file is licensed under the GNU General Public License version 3 (GPLv3).
+ *
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ * @copyright  Copyright (c) OpenDXP (https://www.opendxp.io)
+ * @license    https://www.gnu.org/licenses/gpl-3.0.html  GNU General Public License version 3 (GPLv3)
+ */
+
+namespace OpenDxp\Bundle\McpBundle\Mcp;
+
+use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
+use OpenDxp\Model\Asset\Image\Thumbnail\Config\Listing as ThumbnailListing;
+use OpenDxp\Model\Element\ElementInterface;
+use OpenDxp\Model\Site\Listing as SiteListing;
+use OpenDxp\Model\WebsiteSetting\Listing as WebsiteSettingListing;
+use OpenDxp\Tool;
+use Throwable;
+use function is_scalar;
+use function sprintf;
+
+final class SiteConfigTool
+{
+    private const array SECTIONS = ['website_settings', 'thumbnails', 'sites', 'languages'];
+
+    #[McpTool(
+        name: 'site_config',
+        description: 'The configuration an editor maintains in this installation: website settings with their values resolved, image thumbnail names, sites and languages. A handler that reads a website setting or renders a thumbnail needs the exact names from here, which appear nowhere in the code.',
+    )]
+    public function __invoke(
+        #[Schema(description: 'One of website_settings, thumbnails, sites, languages. All of them when omitted.')]
+        ?string $section = null,
+    ): array {
+        if (null !== $section && !in_array($section, self::SECTIONS, true)) {
+            return ['error' => sprintf('Unknown section "%s". Available: %s.', $section, implode(', ', self::SECTIONS))];
+        }
+
+        $sections = null !== $section ? [$section] : self::SECTIONS;
+        $config = [];
+
+        foreach ($sections as $name) {
+            $config[$name] = match ($name) {
+                'website_settings' => $this->websiteSettings(),
+                'thumbnails' => $this->thumbnails(),
+                'sites' => $this->sites(),
+                'languages' => Tool::getValidLanguages(),
+            };
+        }
+
+        return $config;
+    }
+
+    private function websiteSettings(): array
+    {
+        $settings = [];
+
+        foreach ((new WebsiteSettingListing())->getSettings() as $setting) {
+            $settings[] = [
+                'name'     => $setting->getName(),
+                'type'     => $setting->getType(),
+                'value'    => $this->readable($setting->getData()),
+                'language' => '' !== $setting->getLanguage() ? $setting->getLanguage() : null,
+                'site'     => $setting->getSiteId(),
+            ];
+        }
+
+        return $settings;
+    }
+
+    private function thumbnails(): array
+    {
+        $thumbnails = [];
+
+        foreach ((new ThumbnailListing())->getThumbnails() as $thumbnail) {
+            $thumbnails[$thumbnail->getName()] = $this->describeItems($thumbnail->getItems());
+        }
+
+        ksort($thumbnails);
+
+        return $thumbnails;
+    }
+
+    private function sites(): array
+    {
+        $sites = [];
+
+        foreach ((new SiteListing())->getSites() as $site) {
+            $sites[] = [
+                'id'         => $site->getId(),
+                'mainDomain' => $site->getMainDomain(),
+                'rootPath'   => $site->getRootPath(),
+            ];
+        }
+
+        return $sites;
+    }
+
+    private function readable(mixed $data): ?string
+    {
+        if ($data instanceof ElementInterface) {
+            try {
+                return $data->getFullPath();
+            } catch (Throwable) {
+                return sprintf('#%s (unresolvable)', $data->getId() ?? '?');
+            }
+        }
+
+        if (is_bool($data)) {
+            return $data ? 'true' : 'false';
+        }
+
+        if (null === $data || is_scalar($data)) {
+            return null === $data ? null : (string) $data;
+        }
+
+        return sprintf('<%s>', get_debug_type($data));
+    }
+
+    private function describeItems(array $items): string
+    {
+        $described = [];
+
+        foreach ($items as $item) {
+            $method = $item['method'] ?? null;
+
+            if (null === $method) {
+                continue;
+            }
+
+            $arguments = $item['arguments'] ?? [];
+            $width = $arguments['width'] ?? null;
+            $height = $arguments['height'] ?? null;
+
+            $described[] = match (true) {
+                null !== $width && null !== $height => sprintf('%s %sx%s', $method, $width, $height),
+                null !== $width => sprintf('%s w%s', $method, $width),
+                null !== $height => sprintf('%s h%s', $method, $height),
+                default => $method,
+            };
+        }
+
+        return [] !== $described ? implode(', ', $described) : 'no transformation';
+    }
+}
