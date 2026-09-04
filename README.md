@@ -39,9 +39,11 @@ reason, and never together with the HTTP transport on a reachable host.
 
 ## Tools
 
-| Tool          | Answers                                                                    |
-|---------------|----------------------------------------------------------------------------|
-| `project_map` | Core and bundle versions, and the API domains the project itself defines.  |
+| Tool            | Answers                                                                                                   |
+|-----------------|-----------------------------------------------------------------------------------------------------------|
+| `project_map`   | The core version, the PHP version and every installed OpenDXP bundle with its version.                    |
+| `site_config`   | Website settings with their references resolved, image thumbnails with their transformation, sites, languages. |
+| `model_schema`  | The DataObject classes, and per class every field with its type, localization and relation targets.       |
 
 Installed bundles contribute their own tools, so the list grows with the installation. Check what
 a given installation offers:

@@ -94,10 +94,6 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
     }
 
     /**
-     * A bundle contributes tools by putting them in its own "Mcp" namespace. That keeps
-     * contributing bundles free of any dependency on this one, which matters for bundles that
-     * ship without it. McpContributorInterface covers the cases where the convention does not fit.
-     *
      * @param class-string $bundleClass
      *
      * @return list<string>
