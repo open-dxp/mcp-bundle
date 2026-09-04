@@ -33,7 +33,7 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue([])
                 ->end()
                 ->scalarNode('instructions')
-                    ->info('Sent to every client during the handshake. The place for conventions that hold across the whole project, so they do not have to live in each client\'s own instruction file.')
+                    ->info('Sent to every client during the handshake, replacing the default text. The place for conventions that hold across the whole project, so they do not have to live in each client\'s own instruction file. An empty string sends none.')
                     ->defaultNull()
                 ->end()
             ->end();

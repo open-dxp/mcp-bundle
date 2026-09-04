@@ -34,6 +34,16 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
 {
     public const string SERVER_NAME = 'opendxp';
 
+    private const string DEFAULT_INSTRUCTIONS = <<<'TEXT'
+        The tools of this server read the OpenDXP installation you are working on: its bundles and
+        versions, its site configuration, its data model, the contracts of its classes and the
+        documentation its bundles ship. Those answers come from the container, the class
+        definitions and the database, so they match the installed versions and cannot go stale.
+
+        Call a tool before listing, searching or reading files. Read files only when a tool has
+        answered and the answer was not enough.
+        TEXT;
+
     #[Override]
     public function getAlias(): string
     {
@@ -59,8 +69,10 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
             ],
         ];
 
-        if (null !== $config['instructions']) {
-            $server['instructions'] = $config['instructions'];
+        $instructions = $config['instructions'] ?? self::DEFAULT_INSTRUCTIONS;
+
+        if ('' !== trim($instructions)) {
+            $server['instructions'] = $instructions;
         }
 
         $container->prependExtensionConfig('mcp', [
