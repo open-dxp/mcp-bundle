@@ -45,6 +45,7 @@ reason, and never together with the HTTP transport on a reachable host.
 | `site_config`    | Website settings with their references resolved, image thumbnails with their transformation, sites, languages. |
 | `model_schema`   | The DataObject classes, and per class every field with its type, localization and relation targets.            |
 | `class_contract` | The public surface of a class or interface: constructor, method signatures, attributes, constants.             |
+| `docs`           | Searches the documentation the installed bundles ship, so answers match the installed versions.               |
 
 Installed bundles contribute their own tools, so the list grows with the installation. Check what
 a given installation offers:
