@@ -27,10 +27,9 @@ class Configuration implements ConfigurationInterface
 
         $treeBuilder->getRootNode()
             ->children()
-                ->arrayNode('tools')
-                    ->info('Tool sources contributed by the project itself: service ids, FQCNs or namespace prefixes (trailing backslash). Bundles are picked up through their own "Mcp" namespace and do not belong here.')
-                    ->scalarPrototype()->cannotBeEmpty()->end()
-                    ->defaultValue([])
+                ->scalarNode('docs_url')
+                    ->info('Base URL of a Docusaurus site. Set to null to keep the tool offline.')
+                    ->defaultValue('https://docs.opendxp.io')
                 ->end()
                 ->scalarNode('instructions')
                     ->info('Sent to every client during the handshake, replacing the default text. The place for conventions that hold across the whole project, so they do not have to live in each client\'s own instruction file. An empty string sends none.')

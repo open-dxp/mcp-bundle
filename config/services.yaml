@@ -3,5 +3,7 @@ services:
         autowire: true
         autoconfigure: true
 
+    OpenDxp\Bundle\McpBundle\DocumentationSearch: ~
+
     OpenDxp\Bundle\McpBundle\Mcp\:
         resource: '../src/Mcp'

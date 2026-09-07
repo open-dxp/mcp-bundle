@@ -17,18 +17,14 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\McpBundle\DependencyInjection;
 
 use Composer\InstalledVersions;
-use OpenDxp\Bundle\McpBundle\Contribution\McpContributorInterface;
 use OpenDxp\Bundle\McpBundle\OpenDxpMcpBundle;
 use Override;
-use ReflectionClass;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
-use function dirname;
-use function is_a;
 
 class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
 {
@@ -65,7 +61,7 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
                 'http' => false,
             ],
             'registry' => [
-                'tools' => $this->collectToolSources($container, $config['tools']),
+                'tools' => ['OpenDxp\\Bundle\\McpBundle\\Mcp\\'],
             ],
         ];
 
@@ -82,48 +78,12 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
 
     public function load(array $configs, ContainerBuilder $container): void
     {
+        $configuration = $this->processConfiguration(new Configuration(), $configs);
+
+        $container->setParameter('opendxp_mcp.docs_url', $configuration['docs_url']);
+
         $loader = new YamlFileLoader($container, new FileLocator([__DIR__ . '/../../config']));
         $loader->load('services.yaml');
-    }
-
-    /**
-     * @param list<string> $projectSources
-     *
-     * @return list<string>
-     */
-    private function collectToolSources(ContainerBuilder $container, array $projectSources): array
-    {
-        $sources = [];
-
-        /** @var array<string, class-string> $bundles */
-        $bundles = $container->getParameter('kernel.bundles');
-
-        foreach ($bundles as $bundleClass) {
-            $sources = [...$sources, ...$this->sourcesOf($bundleClass)];
-        }
-
-        return array_values(array_unique([...$sources, ...$projectSources]));
-    }
-
-    /**
-     * @param class-string $bundleClass
-     *
-     * @return list<string>
-     */
-    private function sourcesOf(string $bundleClass): array
-    {
-        if (is_a($bundleClass, McpContributorInterface::class, true)) {
-            return $bundleClass::getMcpToolSources();
-        }
-
-        $reflection = new ReflectionClass($bundleClass);
-        $file = $reflection->getFileName();
-
-        if (false === $file || !is_dir(dirname($file) . '/Mcp')) {
-            return [];
-        }
-
-        return [$reflection->getNamespaceName() . '\\Mcp\\'];
     }
 
     private function version(): string
