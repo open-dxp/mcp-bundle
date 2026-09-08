@@ -20,6 +20,8 @@ use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionEnum;
+use ReflectionEnumBackedCase;
 use ReflectionIntersectionType;
 use ReflectionMethod;
 use ReflectionNamedType;
@@ -27,7 +29,9 @@ use ReflectionParameter;
 use ReflectionType;
 use ReflectionUnionType;
 use Throwable;
+use function count;
 use function implode;
+use function in_array;
 use function is_scalar;
 use function sprintf;
 
@@ -55,7 +59,7 @@ final class ClassContractTool
 
         $contract = [
             'class' => $reflection->getName(),
-            'kind' => $this->kind($reflection),
+            'declaration' => $this->getDeclaration($reflection),
         ];
 
         if (false !== ($parent = $reflection->getParentClass())) {
@@ -66,20 +70,27 @@ final class ClassContractTool
             $contract['implements'] = $reflection->getInterfaceNames();
         }
 
-        if ([] !== ($attributes = $this->attributes($reflection->getAttributes()))) {
+        if ([] !== ($attributes = $this->describeAttributes($reflection->getAttributes()))) {
             $contract['attributes'] = $attributes;
         }
 
-        if ([] !== ($constants = $this->constants($reflection))) {
+        if ($reflection->isEnum()) {
+            $contract += $this->describeEnum(new ReflectionEnum($name));
+        }
+
+        if ([] !== ($constants = $this->describeConstants($reflection))) {
             $contract['constants'] = $constants;
         }
 
         if (null !== $constructor) {
-            $contract['constructor'] = $this->parameters($constructor);
+            $contract['constructor'] = $this->describeParameters($constructor);
         }
 
-        $contract['methods'] = $this->methods($reflection);
-        $inherited = $this->inherited($reflection);
+        if ([] !== ($methods = $this->describeMethods($reflection))) {
+            $contract['methods'] = $methods;
+        }
+
+        $inherited = $this->getInheritedMethods($reflection);
 
         if ([] !== $inherited) {
             $contract['inherited'] = $inherited;
@@ -91,7 +102,7 @@ final class ClassContractTool
     /**
      * @param ReflectionClass<object> $reflection
      */
-    private function kind(ReflectionClass $reflection): string
+    private function getDeclaration(ReflectionClass $reflection): string
     {
         return match (true) {
             $reflection->isInterface() => 'interface',
@@ -103,11 +114,36 @@ final class ClassContractTool
     }
 
     /**
+     * @param ReflectionEnum<\UnitEnum> $enum
+     *
+     * @return array<string, mixed>
+     */
+    private function describeEnum(ReflectionEnum $enum): array
+    {
+        $backingType = $enum->getBackingType();
+        $cases = [];
+
+        foreach ($enum->getCases() as $case) {
+            if ($case instanceof ReflectionEnumBackedCase) {
+                $cases[$case->getName()] = $this->describeValue($case->getBackingValue());
+
+                continue;
+            }
+
+            $cases[] = $case->getName();
+        }
+
+        return null === $backingType
+            ? ['cases' => $cases]
+            : ['backed_by' => $this->describeType($backingType), 'cases' => $cases];
+    }
+
+    /**
      * @param ReflectionClass<object> $reflection
      *
      * @return array<string, string>
      */
-    private function methods(ReflectionClass $reflection): array
+    private function describeMethods(ReflectionClass $reflection): array
     {
         $methods = [];
 
@@ -116,12 +152,17 @@ final class ClassContractTool
                 continue;
             }
 
+            // Every enum declares these three itself. They say nothing about this one.
+            if ($reflection->isEnum() && in_array($method->getName(), ['cases', 'from', 'tryFrom'], true)) {
+                continue;
+            }
+
             $methods[$method->getName()] = sprintf(
                 '%s%s(%s): %s',
                 $method->isStatic() ? 'static ' : '',
                 $method->getName(),
-                implode(', ', $this->parameters($method)),
-                $this->type($method->getReturnType()),
+                implode(', ', $this->describeParameters($method)),
+                $this->describeType($method->getReturnType()),
             );
         }
 
@@ -135,7 +176,7 @@ final class ClassContractTool
      *
      * @return array<string, list<string>>
      */
-    private function inherited(ReflectionClass $reflection): array
+    private function getInheritedMethods(ReflectionClass $reflection): array
     {
         $inherited = [];
 
@@ -159,23 +200,23 @@ final class ClassContractTool
     /**
      * @return list<string>
      */
-    private function parameters(ReflectionMethod $method): array
+    private function describeParameters(ReflectionMethod $method): array
     {
         $parameters = [];
 
         foreach ($method->getParameters() as $parameter) {
             $parameters[] = sprintf(
                 '%s $%s%s',
-                $this->type($parameter->getType()),
+                $this->describeType($parameter->getType()),
                 $parameter->getName(),
-                $this->defaultValue($parameter),
+                $this->describeDefaultValue($parameter),
             );
         }
 
         return $parameters;
     }
 
-    private function defaultValue(ReflectionParameter $parameter): string
+    private function describeDefaultValue(ReflectionParameter $parameter): string
     {
         if (!$parameter->isDefaultValueAvailable()) {
             return '';
@@ -187,22 +228,27 @@ final class ClassContractTool
             return ' = ?';
         }
 
-        return sprintf(' = %s', match (true) {
-            null === $value => 'null',
-            is_bool($value) => $value ? 'true' : 'false',
-            is_array($value) => '[]',
-            is_string($value) => sprintf("'%s'", $value),
-            is_scalar($value) => (string) $value,
-            default => '?',
-        });
+        return sprintf(' = %s', $this->describeValue($value));
     }
 
-    private function type(?ReflectionType $type): string
+    private function describeValue(mixed $value): string
+    {
+        return match (true) {
+            null === $value => 'null',
+            is_bool($value) => $value ? 'true' : 'false',
+            is_string($value) => sprintf("'%s'", $value),
+            is_scalar($value) => (string) $value,
+            is_array($value) => [] === $value ? '[]' : sprintf('array(%d)', count($value)),
+            default => sprintf('<%s>', get_debug_type($value)),
+        };
+    }
+
+    private function describeType(?ReflectionType $type): string
     {
         return match (true) {
             $type instanceof ReflectionNamedType => ($type->allowsNull() && 'null' !== $type->getName() && 'mixed' !== $type->getName() ? '?' : '') . $type->getName(),
-            $type instanceof ReflectionUnionType => implode('|', array_map(fn (ReflectionType $t): string => $this->type($t), $type->getTypes())),
-            $type instanceof ReflectionIntersectionType => implode('&', array_map(fn (ReflectionType $t): string => $this->type($t), $type->getTypes())),
+            $type instanceof ReflectionUnionType => implode('|', array_map(fn (ReflectionType $t): string => $this->describeType($t), $type->getTypes())),
+            $type instanceof ReflectionIntersectionType => implode('&', array_map(fn (ReflectionType $t): string => $this->describeType($t), $type->getTypes())),
             default => 'mixed',
         };
     }
@@ -212,7 +258,7 @@ final class ClassContractTool
      *
      * @return list<string>
      */
-    private function attributes(array $attributes): array
+    private function describeAttributes(array $attributes): array
     {
         $described = [];
 
@@ -220,12 +266,7 @@ final class ClassContractTool
             $arguments = [];
 
             foreach ($attribute->getArguments() as $key => $value) {
-                $rendered = match (true) {
-                    is_string($value) => sprintf("'%s'", $value),
-                    is_bool($value) => $value ? 'true' : 'false',
-                    is_scalar($value) => (string) $value,
-                    default => '…',
-                };
+                $rendered = $this->describeValue($value);
 
                 $arguments[] = is_string($key) ? sprintf('%s: %s', $key, $rendered) : $rendered;
             }
@@ -243,7 +284,7 @@ final class ClassContractTool
      *
      * @return array<string, string>
      */
-    private function constants(ReflectionClass $reflection): array
+    private function describeConstants(ReflectionClass $reflection): array
     {
         $constants = [];
 
@@ -252,15 +293,12 @@ final class ClassContractTool
                 continue;
             }
 
-            $value = $constant->getValue();
+            // Enum cases are constants too, and they are reported as cases.
+            if ($constant->isEnumCase()) {
+                continue;
+            }
 
-            $constants[$constant->getName()] = match (true) {
-                is_string($value) => sprintf("'%s'", $value),
-                is_bool($value) => $value ? 'true' : 'false',
-                is_array($value) => sprintf('array(%d)', count($value)),
-                is_scalar($value) => (string) $value,
-                default => '…',
-            };
+            $constants[$constant->getName()] = $this->describeValue($constant->getValue());
         }
 
         return $constants;

@@ -51,7 +51,7 @@ final readonly class DocumentationSearch
         }
 
         try {
-            $response = $this->httpClient->request('GET', $this->absolute('/search.php'), [
+            $response = $this->httpClient->request('GET', $this->getAbsoluteUrl('/search.php'), [
                 'query' => $parameters,
                 'timeout' => 10,
             ]);
@@ -62,7 +62,7 @@ final readonly class DocumentationSearch
         }
     }
 
-    public function absolute(string $path): string
+    public function getAbsoluteUrl(string $path): string
     {
         return sprintf('%s%s', rtrim((string) $this->baseUrl, '/'), $path);
     }

@@ -13,7 +13,10 @@ Built on [`symfony/mcp-bundle`](https://github.com/symfony/mcp-bundle) and the o
 
 | Release | Supported OpenDXP Versions | Supported Symfony Versions | Release Date | Maintained     | Branch |
 |---------|----------------------------|----------------------------|--------------|----------------|--------|
-| **1.x** | `^1.3`                     | `^7.4`                     | 2026         | Feature Branch | 1.x    |
+| **1.x** | `^1.4`                     | `^7.4`                     | 2026         | Feature Branch | 1.x    |
+
+The server itself is built on `symfony/mcp-bundle`, which is still on `0.x`. Every minor release
+of it may change the configuration, so a minor release here may follow it.
 
 ## Installation
 
@@ -38,13 +41,13 @@ reason, and never together with the HTTP transport on a reachable host.
 
 ## Tools
 
-| Tool             | Answers                                                                                                        |
-|------------------|----------------------------------------------------------------------------------------------------------------|
-| `project_map`    | The core version, the PHP version and every installed OpenDXP bundle with its version.                         |
-| `site_config`    | Website settings with their references resolved, image thumbnails with their transformation, sites, languages. |
-| `model_schema`   | The DataObject classes, and per class every field with its type, localization and relation targets.            |
-| `class_contract` | The public surface of a class or interface: constructor, method signatures, attributes, constants.             |
-| `docs`           | Searches docs.opendxp.io and answers with the matching pages and an excerpt from each.                         |
+| Tool             | Answers                                                                                                         |
+|------------------|-----------------------------------------------------------------------------------------------------------------|
+| `project_map`    | The core version, the PHP version, every installed OpenDXP bundle, and the command that runs the console.       |
+| `site_config`    | Website settings with their references resolved, image thumbnails with their transformation, sites, languages.  |
+| `model_schema`   | The DataObject classes with their field collections, bricks and stores, and per class every field.              |
+| `class_contract` | The public surface of a class, interface or enum: constructor, method signatures, attributes, constants, cases. |
+| `docs`           | Searches docs.opendxp.io and answers with the matching pages and an excerpt from each.                          |
 
 Installed bundles contribute their own tools, so the list grows with the installation. Check what
 a given installation offers:
@@ -52,6 +55,11 @@ a given installation offers:
 ```bash
 bin/console debug:mcp
 ```
+
+There is deliberately no tool for services, routes and bundle configuration. `debug:container`,
+`debug:router` and `debug:config` already answer those, and a wrapper around them would only fall
+behind. What a client cannot know is how to reach the console of an installation it does not run
+in, so `project_map` names the command, and the default instructions send the agent there.
 
 `docs` is the one tool that leaves the machine. It queries the search endpoint of the
 documentation site, and nothing else is sent anywhere. Point it elsewhere or turn it off:

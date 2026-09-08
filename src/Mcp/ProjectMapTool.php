@@ -19,6 +19,8 @@ namespace OpenDxp\Bundle\McpBundle\Mcp;
 use Composer\InstalledVersions;
 use Mcp\Capability\Attribute\McpTool;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use function getenv;
+use function sprintf;
 
 final class ProjectMapTool
 {
@@ -27,31 +29,49 @@ final class ProjectMapTool
     public function __construct(
         #[Autowire('%kernel.environment%')]
         private readonly string $environment,
+        #[Autowire('%kernel.project_dir%')]
+        private readonly string $projectDir,
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'project_map',
-        description: 'What this OpenDXP installation actually is: the core version, the PHP version and every installed OpenDXP bundle with its version. Call this before answering anything about the stack, instead of assuming a version from documentation.',
+        description: 'What this OpenDXP installation actually is: the core version, the PHP version, every installed OpenDXP bundle with its version, and the command that runs its console. Call this before answering anything about the stack, instead of assuming a version from documentation.',
     )]
     public function __invoke(): array
     {
         return [
             'opendxp' => [
-                'version' => $this->version(self::CORE_PACKAGE),
-                'php' => PHP_VERSION,
+                'version'     => $this->getVersion(self::CORE_PACKAGE),
+                'php'         => PHP_VERSION,
                 'environment' => $this->environment,
             ],
-            'bundles' => $this->bundles(),
+            'console' => $this->getConsoleCommand(),
+            'bundles' => $this->getBundles(),
         ];
     }
 
-    private function bundles(): array
+    private function getConsoleCommand(): string
+    {
+        if ('true' === getenv('IS_DDEV_PROJECT')) {
+            return sprintf('ddev exec -d %s php bin/console', $this->projectDir);
+        }
+
+        return sprintf('php %s/bin/console', $this->projectDir);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getBundles(): array
     {
         $bundles = [];
 
         foreach (InstalledVersions::getInstalledPackagesByType('opendxp-bundle') as $package) {
-            $bundles[$package] = $this->version($package);
+            $bundles[$package] = $this->getVersion($package);
         }
 
         ksort($bundles);
@@ -59,7 +79,7 @@ final class ProjectMapTool
         return $bundles;
     }
 
-    private function version(string $package): string
+    private function getVersion(string $package): string
     {
         if (!InstalledVersions::isInstalled($package)) {
             return 'not installed';

@@ -57,8 +57,8 @@ final readonly class DocsTool
             $pages[] = [
                 'title' => $hit['title'],
                 'section' => $hit['section'],
-                'url' => $this->documentation->absolute($hit['url']),
-                'markdown_url' => null === $hit['markdown_url'] ? null : $this->documentation->absolute($hit['markdown_url']),
+                'url' => $this->documentation->getAbsoluteUrl($hit['url']),
+                'markdown_url' => null === $hit['markdown_url'] ? null : $this->documentation->getAbsoluteUrl($hit['markdown_url']),
                 'excerpt' => $hit['excerpt'],
             ];
         }

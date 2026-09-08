@@ -38,6 +38,10 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
 
         Call a tool before listing, searching or reading files. Read files only when a tool has
         answered and the answer was not enough.
+
+        Services, routes and bundle configuration have no tool. Ask the console of the installation
+        instead: debug:container, debug:router, debug:config. project_map names the command that
+        runs them here, which is rarely a plain "php bin/console".
         TEXT;
 
     #[Override]
@@ -55,7 +59,7 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
 
         $server = [
             'name' => 'OpenDXP',
-            'version' => $this->version(),
+            'version' => $this->getVersion(),
             'transports' => [
                 'stdio' => true,
                 'http' => false,
@@ -86,7 +90,7 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
         $loader->load('services.yaml');
     }
 
-    private function version(): string
+    private function getVersion(): string
     {
         if (!InstalledVersions::isInstalled(OpenDxpMcpBundle::PACKAGE_NAME)) {
             return '0.0.0';

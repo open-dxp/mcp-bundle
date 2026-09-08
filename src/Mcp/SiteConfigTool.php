@@ -31,6 +31,9 @@ final class SiteConfigTool
 {
     private const array SECTIONS = ['website_settings', 'thumbnails', 'sites', 'languages'];
 
+    /**
+     * @return array<string, mixed>
+     */
     #[McpTool(
         name: 'site_config',
         description: 'The configuration an editor maintains in this installation: website settings with their values resolved, image thumbnail names, sites and languages. A handler that reads a website setting or renders a thumbnail needs the exact names from here, which appear nowhere in the code.',
@@ -48,9 +51,9 @@ final class SiteConfigTool
 
         foreach ($sections as $name) {
             $config[$name] = match ($name) {
-                'website_settings' => $this->websiteSettings(),
-                'thumbnails' => $this->thumbnails(),
-                'sites' => $this->sites(),
+                'website_settings' => $this->getWebsiteSettings(),
+                'thumbnails' => $this->getThumbnails(),
+                'sites' => $this->getSites(),
                 'languages' => Tool::getValidLanguages(),
             };
         }
@@ -58,7 +61,10 @@ final class SiteConfigTool
         return $config;
     }
 
-    private function websiteSettings(): array
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function getWebsiteSettings(): array
     {
         $settings = [];
 
@@ -66,7 +72,7 @@ final class SiteConfigTool
             $settings[] = [
                 'name'     => $setting->getName(),
                 'type'     => $setting->getType(),
-                'value'    => $this->readable($setting->getData()),
+                'value'    => $this->describeValue($setting->getData()),
                 'language' => '' !== $setting->getLanguage() ? $setting->getLanguage() : null,
                 'site'     => $setting->getSiteId(),
             ];
@@ -75,12 +81,15 @@ final class SiteConfigTool
         return $settings;
     }
 
-    private function thumbnails(): array
+    /**
+     * @return array<string, string>
+     */
+    private function getThumbnails(): array
     {
         $thumbnails = [];
 
         foreach ((new ThumbnailListing())->getThumbnails() as $thumbnail) {
-            $thumbnails[$thumbnail->getName()] = $this->describeItems($thumbnail->getItems());
+            $thumbnails[$thumbnail->getName()] = $this->describeThumbnailItems($thumbnail->getItems());
         }
 
         ksort($thumbnails);
@@ -88,7 +97,10 @@ final class SiteConfigTool
         return $thumbnails;
     }
 
-    private function sites(): array
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function getSites(): array
     {
         $sites = [];
 
@@ -103,7 +115,7 @@ final class SiteConfigTool
         return $sites;
     }
 
-    private function readable(mixed $data): ?string
+    private function describeValue(mixed $data): ?string
     {
         if ($data instanceof ElementInterface) {
             try {
@@ -124,7 +136,10 @@ final class SiteConfigTool
         return sprintf('<%s>', get_debug_type($data));
     }
 
-    private function describeItems(array $items): string
+    /**
+     * @param list<array<string, mixed>> $items
+     */
+    private function describeThumbnailItems(array $items): string
     {
         $described = [];
 
