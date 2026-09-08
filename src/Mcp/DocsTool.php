@@ -19,6 +19,11 @@ namespace OpenDxp\Bundle\McpBundle\Mcp;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 use OpenDxp\Bundle\McpBundle\DocumentationSearch;
+use function count;
+use function is_array;
+use function is_int;
+use function is_string;
+use function trim;
 
 final readonly class DocsTool
 {
@@ -53,20 +58,65 @@ final readonly class DocsTool
 
         $pages = [];
 
-        foreach ($result['hits'] ?? [] as $hit) {
-            $pages[] = [
-                'title' => $hit['title'],
-                'section' => $hit['section'],
-                'url' => $this->documentation->getAbsoluteUrl($hit['url']),
-                'markdown_url' => null === $hit['markdown_url'] ? null : $this->documentation->getAbsoluteUrl($hit['markdown_url']),
-                'excerpt' => $hit['excerpt'],
-            ];
+        foreach ($this->getHits($result) as $hit) {
+            $page = $this->describePage($hit);
+
+            if (null !== $page) {
+                $pages[] = $page;
+            }
+        }
+
+        $total = $result['total'] ?? null;
+
+        return [
+            'query'         => is_string($result['query'] ?? null) ? $result['query'] : $query,
+            'pages_matched' => is_int($total) ? $total : count($pages),
+            'pages'         => $pages,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $result
+     *
+     * @return list<mixed>
+     */
+    private function getHits(array $result): array
+    {
+        $hits = $result['hits'] ?? null;
+
+        return is_array($hits) ? array_values($hits) : [];
+    }
+
+    /**
+     * @return array<string, string|null>|null
+     */
+    private function describePage(mixed $hit): ?array
+    {
+        if (!is_array($hit)) {
+            return null;
+        }
+
+        $url = $hit['url'] ?? null;
+        $markdownUrl = $hit['markdown_url'] ?? null;
+
+        // A page without a url is nothing the caller can follow.
+        if (!is_string($url) || '' === $url) {
+            return null;
         }
 
         return [
-            'query' => $result['query'] ?? $query,
-            'pages_matched' => $result['total'] ?? 0,
-            'pages' => $pages,
+            'title'        => $this->getText($hit['title'] ?? null),
+            'section'      => $this->getText($hit['section'] ?? null),
+            'url'          => $this->documentation->getAbsoluteUrl($url),
+            'markdown_url' => is_string($markdownUrl) && '' !== $markdownUrl
+                ? $this->documentation->getAbsoluteUrl($markdownUrl)
+                : null,
+            'excerpt'      => $this->getText($hit['excerpt'] ?? null),
         ];
+    }
+
+    private function getText(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
     }
 }
