@@ -45,7 +45,7 @@ final class ClassContractTool
         description: 'The public surface of a class, interface, trait or enum: constructor dependencies, method signatures, attributes and constants, without any method body. Use it instead of reading a source file when you only need to know how to call something.',
     )]
     public function __invoke(
-        #[Schema(description: 'Fully qualified name, e.g. "OpenDxp\\Bundle\\HeadlessBundle\\Transformer\\AssetThumbnailTransformer".')]
+        #[Schema(description: 'Fully qualified name, e.g. "OpenDxp\\Model\\DataObject\\MyClass".')]
         string $class,
     ): array {
         $name = ltrim($class, '\\');

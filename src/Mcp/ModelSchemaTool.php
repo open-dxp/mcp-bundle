@@ -49,7 +49,7 @@ final class ModelSchemaTool
         description: 'The DataObject model of this installation. Without a class name it lists every class, plus every field collection, object brick and classification store with the class fields they belong to; a definition with none belongs nowhere and cannot hold data. With a class name it describes every field of that class, including localized fields, the classes a relation may point at, and the fields of the collections and bricks it can hold. Read this before writing a handler that loads or filters DataObjects.',
     )]
     public function __invoke(
-        #[Schema(description: 'Class name, e.g. "EcommerceProduct". Omit it to list the classes first.')]
+        #[Schema(description: 'Class name as it appears in the class list. Omit it to see that list first.')]
         ?string $class = null,
     ): array {
         if (null === $class) {
