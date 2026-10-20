@@ -5,24 +5,25 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\McpBundle\Tests\Feature\Mcp;
 
 use OpenDxp\Bundle\McpBundle\Mcp\HowToTool;
+use OpenDxp\Model\WebsiteSetting;
 use OpenDxp\TestFoundation\Container;
 
 it('lists the decisions of every provider', function () {
     expect(Container::get(HowToTool::class)())->toBe([
         'decisions' => [
-            ['id' => 'query_or_command', 'question' => 'Query or command?', 'options' => 'Query | Command'],
+            ['id' => 'editor_value', 'question' => 'Where does a value live that an editor changes?', 'options' => 'Website setting | Property'],
         ],
     ]);
 });
 
 it('answers a decision by its id', function () {
-    expect(Container::get(HowToTool::class)('query_or_command'))->toBe([
-        'question' => 'Query or command?',
+    expect(Container::get(HowToTool::class)('editor_value'))->toBe([
+        'question' => 'Where does a value live that an editor changes?',
         'options'  => [
-            ['option' => 'Query', 'when' => 'The endpoint reads.', 'next' => 'make:api-query'],
-            ['option' => 'Command', 'when' => 'The endpoint writes.'],
+            ['option' => 'Website setting', 'when' => 'The value holds for the whole site.', 'symbol' => WebsiteSetting::class],
+            ['option' => 'Property', 'when' => 'The value belongs to a document and its children.'],
         ],
-        'note' => 'A command may answer with a body.',
+        'note' => 'A property is inherited unless a child overrides it.',
     ]);
 });
 

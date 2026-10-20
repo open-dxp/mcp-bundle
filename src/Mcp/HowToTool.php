@@ -43,12 +43,9 @@ final readonly class HowToTool
     #[McpTool(
         name: 'how_to',
         description: <<<'TEXT'
-        Which mechanism of an installed bundle is the right one for what you are about to do. Ask this before
-        you build on an extension point of a bundle, such as a transformer, a resolver, an entity, a filter or
-        a route. Several mechanisms lead to a working result and only one of them is right for a given case.
-        No documentation page states that, because it lies between two pages that are each correct. Without
-        an argument it lists every question the installed bundles can answer. Then ask again with the id of
-        the one that fits.
+        Tells which of several mechanisms is the right one for a given case. The installed bundles contribute
+        the questions. Ask this before you build on an extension point of a bundle. Without an argument it lists
+        every question. Then ask again with the id of the one that fits.
         TEXT,
     )]
     public function __invoke(

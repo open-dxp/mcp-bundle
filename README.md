@@ -104,8 +104,7 @@ hold across the whole project:
 # config/packages/opendxp_mcp.yaml
 opendxp_mcp:
     instructions: |
-        API endpoints live in src/Domain/<Context>/, one Action, Query and QueryHandler each.
-        Only the handler carries logic.
+        Controllers live in src/Controller/<Area>/. Document templates live in templates/content/.
 ```
 
 ## Adding your own tools
@@ -136,6 +135,8 @@ A bundle contributes them with a service that implements `DecisionProviderInterf
 use OpenDxp\Bundle\McpBundle\Guidance\Decision;
 use OpenDxp\Bundle\McpBundle\Guidance\DecisionProviderInterface;
 use OpenDxp\Bundle\McpBundle\Guidance\Option;
+use OpenDxp\Model\Property;
+use OpenDxp\Model\WebsiteSetting;
 
 final readonly class DecisionProvider implements DecisionProviderInterface
 {
@@ -143,11 +144,11 @@ final readonly class DecisionProvider implements DecisionProviderInterface
     {
         return [
             new Decision(
-                id: 'query_or_command',
-                question: 'Query or command?',
+                id: 'editor_value',
+                question: 'Where does a value live that an editor changes?',
                 options: [
-                    new Option(name: 'Query', when: 'The endpoint reads.', symbol: QueryInterface::class),
-                    new Option(name: 'Command', when: 'The endpoint writes.', symbol: CommandInterface::class),
+                    new Option(name: 'Website setting', when: 'The value holds for the whole site.', symbol: WebsiteSetting::class),
+                    new Option(name: 'Property', when: 'The value belongs to a document and its children.', symbol: Property::class),
                 ],
             ),
         ];

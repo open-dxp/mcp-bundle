@@ -43,7 +43,7 @@ final readonly class DocsTool
     public function __invoke(
         #[Schema(description: 'What to search for, e.g. "thumbnail definition" or "conditional logic".')]
         string $query,
-        #[Schema(description: 'Narrow to one bundle, e.g. "headless", "formbuilder", "i18n", or "core-framework" for the core itself. This is the bundle name from the documentation, not the composer package.')]
+        #[Schema(description: 'Narrow to one section. "core-framework" is the core itself. A bundle has the name its documentation shows, not the name of its composer package.')]
         ?string $section = null,
     ): array {
         if (!$this->documentation->isAvailable()) {
