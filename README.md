@@ -48,6 +48,7 @@ reason, and never together with the HTTP transport on a reachable host.
 | `model_schema`   | The DataObject classes with their field collections, bricks and stores, and per class every field.              |
 | `class_contract` | The public surface of a class, interface or enum: constructor, method signatures, attributes, constants, cases. |
 | `docs`           | Searches docs.opendxp.io and answers with the matching pages and an excerpt from each.                          |
+| `how_to`         | Which mechanism of an installed bundle is the right one for a given case, from the decisions the bundles ship.  |
 
 Installed bundles contribute their own tools, so the list grows with the installation. Check what
 a given installation offers:
@@ -125,6 +126,37 @@ mcp:
                     - 'App\Mcp\'
 ```
 
+## Contributing decisions
+
+Some questions have more than one working answer, and only one of them fits a given case.
+`how_to` answers them from the decisions that installed bundles contribute.
+A bundle contributes them with a service that implements `DecisionProviderInterface`:
+
+```php
+use OpenDxp\Bundle\McpBundle\Guidance\Decision;
+use OpenDxp\Bundle\McpBundle\Guidance\DecisionProviderInterface;
+use OpenDxp\Bundle\McpBundle\Guidance\Option;
+
+final readonly class DecisionProvider implements DecisionProviderInterface
+{
+    public function getDecisions(): array
+    {
+        return [
+            new Decision(
+                id: 'query_or_command',
+                question: 'Query or command?',
+                options: [
+                    new Option(name: 'Query', when: 'The endpoint reads.', symbol: QueryInterface::class),
+                    new Option(name: 'Command', when: 'The endpoint writes.', symbol: CommandInterface::class),
+                ],
+            ),
+        ];
+    }
+}
+```
+
+With autoconfiguration the service needs no tag. Write `symbol` as a `::class` constant,
+so a renamed class fails static analysis instead of leaving a wrong answer behind.
 
 ## Writing a good tool
 

@@ -1,0 +1,3 @@
+services:
+    OpenDxp\Bundle\McpBundle\Tests\Fixtures\DecisionProvider:
+        autoconfigure: true

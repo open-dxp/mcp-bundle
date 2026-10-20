@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\McpBundle\DependencyInjection;
 
 use Composer\InstalledVersions;
+use OpenDxp\Bundle\McpBundle\Guidance\DecisionProviderInterface;
 use OpenDxp\Bundle\McpBundle\OpenDxpMcpBundle;
 use Override;
 use Symfony\Component\Config\FileLocator;
@@ -85,6 +86,10 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
         $configuration = $this->processConfiguration(new Configuration(), $configs);
 
         $container->setParameter('opendxp_mcp.docs_url', $configuration['docs_url']);
+
+        $container
+            ->registerForAutoconfiguration(DecisionProviderInterface::class)
+            ->addTag(DecisionProviderInterface::TAG);
 
         $loader = new YamlFileLoader($container, new FileLocator([__DIR__ . '/../../config']));
         $loader->load('services.yaml');

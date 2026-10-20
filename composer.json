@@ -23,14 +23,23 @@
             "OpenDxp\\Bundle\\McpBundle\\": "src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "OpenDxp\\Bundle\\McpBundle\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "open-dxp/opendxp": "^1.4",
-        "symfony/mcp-bundle": "^0.13.0"
+        "symfony/http-client": "^7.4",
+        "symfony/mcp-bundle": "^0.14"
     },
     "require-dev": {
+        "open-dxp/test-foundation": "^1.0",
         "phpstan/phpstan": "^2.0",
-        "phpstan/phpstan-symfony": "^2.0"
+        "phpstan/phpstan-symfony": "^2.0",
+        "symfony/dotenv": "^7.4",
+        "symfony/runtime": "^7.4"
     },
     "extra": {
         "opendxp": {
@@ -43,7 +52,9 @@
         "sort-packages": true,
         "allow-plugins": {
             "phpstan/extension-installer": false,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "pestphp/pest-plugin": true,
+            "symfony/runtime": true
         }
     }
 }
