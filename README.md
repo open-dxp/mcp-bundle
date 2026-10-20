@@ -1,5 +1,9 @@
 # OpenDXP MCP Bundle
 
+> [!CAUTION]
+> This bundle is no longer maintained. Coding agents get access to an OpenDXP installation through
+> [open-dxp/mate-extension](https://github.com/open-dxp/mate-extension), an extension for Symfony AI Mate.
+
 Makes a running OpenDXP installation queryable over the [Model Context Protocol](https://modelcontextprotocol.io),
 so an AI agent can ask what this installation actually is instead of guessing from documentation.
 
