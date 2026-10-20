@@ -42,6 +42,9 @@
         "symfony/runtime": "^7.4"
     },
     "extra": {
+        "branch-alias": {
+            "dev-1.x": "1.1.x-dev"
+        },
         "opendxp": {
             "bundles": [
                 "OpenDxp\\Bundle\\McpBundle\\OpenDxpMcpBundle"
