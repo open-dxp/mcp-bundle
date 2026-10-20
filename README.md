@@ -1,11 +1,14 @@
 # OpenDXP MCP Bundle
 
-Makes a running OpenDXP installation queryable over the [Model Context Protocol](https://modelcontextprotocol.io),
-so an AI agent can ask what this installation actually is instead of guessing from documentation.
+An AI agent that works on an OpenDXP project guesses twice. It guesses what the installation
+contains, and it guesses which of several mechanisms fits the task. Both guesses produce code that
+looks right and is wrong.
 
-Documentation describes a version. This bundle answers from the container, the class definitions
-and the database of the installation in front of you, which is the part no written text can keep up
-with.
+This bundle runs a [Model Context Protocol](https://modelcontextprotocol.io) server inside the
+installation. Its tools answer from the container, the class definitions and the database of the
+installation in front of the agent. Documentation describes a version, and these answers describe
+this installation. `how_to` answers the second question. It tells which mechanism fits a case, from
+decisions that the core and the installed bundles ship.
 
 Built on [`symfony/mcp-bundle`](https://github.com/symfony/mcp-bundle) and the official [`mcp/sdk`](https://github.com/modelcontextprotocol/php-sdk).
 
@@ -44,11 +47,11 @@ reason, and never together with the HTTP transport on a reachable host.
 | Tool             | Answers                                                                                                         |
 |------------------|-----------------------------------------------------------------------------------------------------------------|
 | `project_map`    | The core version, the PHP version, every installed OpenDXP bundle, and the command that runs the console.       |
-| `site_config`    | Website settings with their references resolved, image thumbnails with their transformation, sites, languages.  |
+| `site_config`    | Website settings with their references resolved, image thumbnails, sites, languages, and where each admin-edited configuration is stored. |
 | `model_schema`   | The DataObject classes with their field collections, bricks and stores, and per class every field.              |
 | `class_contract` | The public surface of a class, interface or enum: constructor, method signatures, attributes, constants, cases. |
 | `docs`           | Searches docs.opendxp.io and answers with the matching pages and an excerpt from each.                          |
-| `how_to`         | Which mechanism of an installed bundle is the right one for a given case, from the decisions the bundles ship.  |
+| `how_to`         | Which mechanism is the right one for a given case, from the decisions of the core and the installed bundles.    |
 
 Installed bundles contribute their own tools, so the list grows with the installation. Check what
 a given installation offers:
@@ -128,15 +131,16 @@ mcp:
 ## Contributing decisions
 
 Some questions have more than one working answer, and only one of them fits a given case.
-`how_to` answers them from the decisions that installed bundles contribute.
-A bundle contributes them with a service that implements `DecisionProviderInterface`:
+`how_to` answers them. This bundle ships the decisions of the core, such as how a class holds a
+group of fields or which document type fits. A bundle or a project contributes its own with a
+service that implements `DecisionProviderInterface`:
 
 ```php
 use OpenDxp\Bundle\McpBundle\Guidance\Decision;
 use OpenDxp\Bundle\McpBundle\Guidance\DecisionProviderInterface;
 use OpenDxp\Bundle\McpBundle\Guidance\Option;
-use OpenDxp\Model\Property;
-use OpenDxp\Model\WebsiteSetting;
+use App\Export\FeedInterface;
+use App\Export\PushInterface;
 
 final readonly class DecisionProvider implements DecisionProviderInterface
 {
@@ -144,11 +148,11 @@ final readonly class DecisionProvider implements DecisionProviderInterface
     {
         return [
             new Decision(
-                id: 'editor_value',
-                question: 'Where does a value live that an editor changes?',
+                id: 'export_target',
+                question: 'How does a partner receive the product export?',
                 options: [
-                    new Option(name: 'Website setting', when: 'The value holds for the whole site.', symbol: WebsiteSetting::class),
-                    new Option(name: 'Property', when: 'The value belongs to a document and its children.', symbol: Property::class),
+                    new Option(name: 'A feed', when: 'The partner fetches the data on its own schedule.', symbol: FeedInterface::class),
+                    new Option(name: 'A push', when: 'The partner needs a change the moment it happens.', symbol: PushInterface::class),
                 ],
             ),
         ];

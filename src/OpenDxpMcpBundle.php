@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace OpenDxp\Bundle\McpBundle;
 
+use OpenDxp\Bundle\McpBundle\DependencyInjection\Compiler\CollectConfigLocationsPass;
 use OpenDxp\Bundle\McpBundle\DependencyInjection\OpenDxpMcpExtension;
 use OpenDxp\Extension\Bundle\AbstractOpenDxpBundle;
 use OpenDxp\Extension\Bundle\Traits\PackageVersionTrait;
@@ -23,6 +24,8 @@ use OpenDxp\HttpKernel\Bundle\DependentBundleInterface;
 use OpenDxp\HttpKernel\BundleCollection\BundleCollection;
 use Override;
 use Symfony\AI\McpBundle\McpBundle;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use function dirname;
 
@@ -35,6 +38,12 @@ class OpenDxpMcpBundle extends AbstractOpenDxpBundle implements DependentBundleI
     public static function registerDependentBundles(BundleCollection $collection): void
     {
         $collection->addBundle(new McpBundle());
+    }
+
+    #[Override]
+    public function build(ContainerBuilder $container): void
+    {
+        $container->addCompilerPass(new CollectConfigLocationsPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION);
     }
 
     #[Override]

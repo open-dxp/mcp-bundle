@@ -15,7 +15,7 @@ final readonly class DecisionProvider implements DecisionProviderInterface
     {
         return [
             new Decision(
-                id: 'editor_value',
+                id: 'fixture_value',
                 question: 'Where does a value live that an editor changes?',
                 options: [
                     new Option(name: 'Website setting', when: 'The value holds for the whole site.', symbol: WebsiteSetting::class),

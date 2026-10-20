@@ -5,5 +5,7 @@ services:
 
     OpenDxp\Bundle\McpBundle\DocumentationSearch: ~
 
+    OpenDxp\Bundle\McpBundle\Guidance\CoreDecisionProvider: ~
+
     OpenDxp\Bundle\McpBundle\Mcp\:
         resource: '../src/Mcp'

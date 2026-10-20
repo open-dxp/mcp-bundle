@@ -43,13 +43,13 @@ final readonly class HowToTool
     #[McpTool(
         name: 'how_to',
         description: <<<'TEXT'
-        Tells which of several mechanisms is the right one for a given case. The installed bundles contribute
-        the questions. Ask this before you build on an extension point of a bundle. Without an argument it lists
-        every question. Then ask again with the id of the one that fits.
+        Tells which of several mechanisms is the right one for a given case. The core and the installed bundles
+        contribute the questions. Ask this before you model data, build a page or use an extension point of a
+        bundle. Without an argument it lists every question. Then ask again with the id of the one that fits.
         TEXT,
     )]
     public function __invoke(
-        #[Schema(description: 'Id of a decision, taken from the list this tool returns without arguments, for example "response_property_value".')]
+        #[Schema(description: 'Id of a decision, taken from the list this tool returns without arguments, for example "object_field_group".')]
         ?string $decision = null,
     ): array {
         $decisions = [];

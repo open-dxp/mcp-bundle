@@ -8,16 +8,14 @@ use OpenDxp\Bundle\McpBundle\Mcp\HowToTool;
 use OpenDxp\Model\WebsiteSetting;
 use OpenDxp\TestFoundation\Container;
 
-it('lists the decisions of every provider', function () {
-    expect(Container::get(HowToTool::class)())->toBe([
-        'decisions' => [
-            ['id' => 'editor_value', 'question' => 'Where does a value live that an editor changes?', 'options' => 'Website setting | Property'],
-        ],
-    ]);
+it('lists the decisions of the core and of every other provider', function () {
+    $ids = array_column(Container::get(HowToTool::class)()['decisions'], 'id');
+
+    expect($ids)->toContain('object_field_group', 'fixture_value');
 });
 
 it('answers a decision by its id', function () {
-    expect(Container::get(HowToTool::class)('editor_value'))->toBe([
+    expect(Container::get(HowToTool::class)('fixture_value'))->toBe([
         'question' => 'Where does a value live that an editor changes?',
         'options'  => [
             ['option' => 'Website setting', 'when' => 'The value holds for the whole site.', 'symbol' => WebsiteSetting::class],

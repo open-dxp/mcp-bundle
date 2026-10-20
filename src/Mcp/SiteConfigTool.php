@@ -18,28 +18,39 @@ namespace OpenDxp\Bundle\McpBundle\Mcp;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
+use OpenDxp\Bundle\McpBundle\DependencyInjection\Compiler\CollectConfigLocationsPass;
 use OpenDxp\Model\Asset\Image\Thumbnail\Config\Listing as ThumbnailListing;
 use OpenDxp\Model\Element\ElementInterface;
 use OpenDxp\Model\Site\Listing as SiteListing;
 use OpenDxp\Model\WebsiteSetting\Listing as WebsiteSettingListing;
 use OpenDxp\Tool;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Throwable;
 use function is_scalar;
 use function sprintf;
 
 final class SiteConfigTool
 {
-    private const array SECTIONS = ['website_settings', 'thumbnails', 'sites', 'languages'];
+    private const array SECTIONS = ['website_settings', 'thumbnails', 'sites', 'languages', 'config_locations'];
+
+    /**
+     * @param list<array<string, string|null>> $configLocations
+     */
+    public function __construct(
+        #[Autowire(param: CollectConfigLocationsPass::PARAMETER)]
+        private readonly array $configLocations,
+    ) {
+    }
 
     /**
      * @return array<string, mixed>
      */
     #[McpTool(
         name: 'site_config',
-        description: 'The configuration an editor maintains in this installation: website settings with their values resolved, image thumbnail names, sites and languages. A handler that reads a website setting or renders a thumbnail needs the exact names from here, which appear nowhere in the code.',
+        description: 'The configuration an editor maintains in this installation: website settings with their values resolved, image thumbnail names, sites and languages. A handler that reads a website setting or renders a thumbnail needs the exact names from here, which appear nowhere in the code. config_locations lists every configuration type that is edited in the admin, with the key that sets where it is stored and where it is stored now.',
     )]
     public function __invoke(
-        #[Schema(description: 'One of website_settings, thumbnails, sites, languages. All of them when omitted.')]
+        #[Schema(description: 'One of website_settings, thumbnails, sites, languages, config_locations. All of them when omitted.')]
         ?string $section = null,
     ): array {
         if (null !== $section && !in_array($section, self::SECTIONS, true)) {
@@ -55,6 +66,7 @@ final class SiteConfigTool
                 'thumbnails' => $this->getThumbnails(),
                 'sites' => $this->getSites(),
                 'languages' => Tool::getValidLanguages(),
+                'config_locations' => $this->configLocations,
             };
         }
 

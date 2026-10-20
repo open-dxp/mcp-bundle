@@ -1,3 +1,21 @@
+opendxp:
+    objects:
+        class_definitions:
+            data:
+                map:
+                    fixtureRelation: \OpenDxp\Bundle\McpBundle\Tests\Fixtures\RelationType
+    documents:
+        type_definitions:
+            map:
+                fixture:
+                    class: \OpenDxp\Model\Document\Link
+                    valid_table: 'link'
+                    children_supported: false
+
 services:
     OpenDxp\Bundle\McpBundle\Tests\Fixtures\DecisionProvider:
         autoconfigure: true
+
+    OpenDxp\Bundle\McpBundle\Tests\Fixtures\Areabrick:
+        tags:
+            - { name: opendxp.area.brick, id: fixture-brick }

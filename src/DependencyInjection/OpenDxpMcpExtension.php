@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace OpenDxp\Bundle\McpBundle\DependencyInjection;
 
 use Composer\InstalledVersions;
+use OpenDxp\Bundle\McpBundle\DependencyInjection\Compiler\CollectConfigLocationsPass;
 use OpenDxp\Bundle\McpBundle\Guidance\DecisionProviderInterface;
 use OpenDxp\Bundle\McpBundle\OpenDxpMcpBundle;
 use Override;
@@ -86,6 +87,7 @@ class OpenDxpMcpExtension extends Extension implements PrependExtensionInterface
         $configuration = $this->processConfiguration(new Configuration(), $configs);
 
         $container->setParameter('opendxp_mcp.docs_url', $configuration['docs_url']);
+        $container->setParameter(CollectConfigLocationsPass::PARAMETER, []);
 
         $container
             ->registerForAutoconfiguration(DecisionProviderInterface::class)
